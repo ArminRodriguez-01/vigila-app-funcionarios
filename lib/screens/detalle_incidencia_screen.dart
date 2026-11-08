@@ -312,11 +312,13 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
         elevation: 2,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // 1. Tarjeta de Tipo de Incidencia y Estado
             Container(
               padding: const EdgeInsets.all(16),
@@ -487,9 +489,9 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 3. Mapa Interactivo
+            // 3. Mapa Interactivo con mejor visibilidad del entorno
             Container(
-              height: 240,
+              height: 250,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: const Color(0xFFCBD5E1)),
@@ -499,7 +501,7 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
                 child: FlutterMap(
                   options: MapOptions(
                     initialCenter: puntoGps,
-                    initialZoom: 16.5,
+                    initialZoom: 14.8, // Zoom más amplio para que el funcionario aprecie calles aledañas y el barrio
                   ),
                   children: [
                     TileLayer(
@@ -656,6 +658,7 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

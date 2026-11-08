@@ -150,23 +150,26 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Banner resumen y buscador
-          _buildTopBanner(theme),
+      body: SafeArea(
+        top: false, // El AppBar ya protege la zona superior
+        child: Column(
+          children: [
+            // Banner resumen y buscador
+            _buildTopBanner(theme),
 
-          // Chips de filtro por estado
-          _buildFilterChips(),
+            // Chips de filtro por estado
+            _buildFilterChips(),
 
-          // Lista de incidencias
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => _cargarIncidencias(),
-              color: const Color(0xFF0F766E),
-              child: _buildListaContent(),
+            // Lista de incidencias con márgenes cómodos
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => _cargarIncidencias(),
+                color: const Color(0xFF0F766E),
+                child: _buildListaContent(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +177,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
   Widget _buildTopBanner(ThemeData theme) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       child: Column(
         children: [
           TextField(
@@ -225,7 +228,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
     return Container(
       width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(18, 6, 18, 12),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -349,7 +352,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
       itemCount: lista.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -366,7 +369,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
     return Card(
       elevation: 1.5,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: esPendiente ? Colors.red.shade200 : const Color(0xFFE2E8F0),
           width: esPendiente ? 1.5 : 1.0,
@@ -374,7 +377,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
       ),
       color: Colors.white,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: () async {
           final cambio = await Navigator.push<bool>(
             context,
@@ -387,7 +390,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(14.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
