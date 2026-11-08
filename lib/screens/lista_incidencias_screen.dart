@@ -15,7 +15,7 @@ class ListaIncidenciasScreen extends StatefulWidget {
 class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
   final CuadrillaApiService _apiService = CuadrillaApiService.instance;
 
-  List<Incidencia> _incidencias = [];
+  List<Incidencia> _todasLasIncidencias = [];
   bool _cargando = true;
   String? _error;
   String _filtroEstado = 'todos'; // 'todos', 'enviado', 'en_revision', 'resuelto'
@@ -51,11 +51,13 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
     }
 
     try {
-      final estadoParam = _filtroEstado == 'todos' ? null : _filtroEstado;
-      final lista = await _apiService.listarIncidencias(estado: estadoParam);
+      // Siempre pedimos todas las incidencias al backend para que los contadores
+      // globales de cada etiqueta ("Todas", "Pendientes", "En Cuadrilla", "Resueltas")
+      // muestren la cantidad total real sin verse afectados por la tarjeta activa.
+      final lista = await _apiService.listarIncidencias();
       if (mounted) {
         setState(() {
-          _incidencias = lista;
+          _todasLasIncidencias = lista;
           _cargando = false;
           _error = null;
         });
@@ -70,21 +72,48 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
     }
   }
 
+  // Contadores globales calculados siempre sobre el total de incidencias
+  int get _totalCount => _todasLasIncidencias.length;
+  int get _pendientesCount =>
+      _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.enviado).length;
+  int get _enCuadrillaCount =>
+      _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.enRevision).length;
+  int get _resueltasCount =>
+      _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.resuelto).length;
+
   List<Incidencia> get _incidenciasFiltradas {
+    // 1. Filtrar según la pestaña/chip seleccionado
+    List<Incidencia> lista;
+    switch (_filtroEstado) {
+      case 'enviado':
+        lista = _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.enviado).toList();
+        break;
+      case 'en_revision':
+        lista = _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.enRevision).toList();
+        break;
+      case 'resuelto':
+        lista = _todasLasIncidencias.where((i) => i.estado == EstadoIncidencia.resuelto).toList();
+        break;
+      case 'todos':
+      default:
+        lista = _todasLasIncidencias;
+        break;
+    }
+
+    // 2. Filtrar por búsqueda
     if (_busqueda.trim().isEmpty) {
-      return _incidencias;
+      return lista;
     }
     final q = _busqueda.toLowerCase().trim();
-    return _incidencias.where((inc) {
+    return lista.where((inc) {
       final matchCat = inc.categoriaNombre.toLowerCase().contains(q);
+      final matchDesc = inc.descripcionTipo.toLowerCase().contains(q);
+      final matchCuadrilla = inc.cuadrilla.toLowerCase().contains(q);
       final matchDir = inc.direccion.toLowerCase().contains(q);
       final matchRespuesta = (inc.respuestaMunicipal ?? '').toLowerCase().contains(q);
-      return matchCat || matchDir || matchRespuesta;
+      return matchCat || matchDesc || matchCuadrilla || matchDir || matchRespuesta;
     }).toList();
   }
-
-  int get _pendientesCount =>
-      _incidencias.where((i) => i.estado == EstadoIncidencia.enviado).length;
 
   @override
   Widget build(BuildContext context) {
@@ -201,15 +230,15 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _filterChip('todos', 'Todas (${_incidencias.length})'),
+            _filterChip('todos', 'Todas ($_totalCount)'),
             const SizedBox(width: 8),
             _filterChip('enviado', '🚨 Pendientes ($_pendientesCount)',
                 badgeColor: const Color(0xFFEF4444)),
             const SizedBox(width: 8),
-            _filterChip('en_revision', '👷 En Cuadrilla',
+            _filterChip('en_revision', '👷 En Cuadrilla ($_enCuadrillaCount)',
                 badgeColor: const Color(0xFFF59E0B)),
             const SizedBox(width: 8),
-            _filterChip('resuelto', '✅ Resueltas',
+            _filterChip('resuelto', '✅ Resueltas ($_resueltasCount)',
                 badgeColor: const Color(0xFF10B981)),
           ],
         ),
@@ -240,18 +269,17 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
         ),
       ),
       onSelected: (selected) {
-        if (selected) {
+        if (selected && _filtroEstado != estadoKey) {
           setState(() {
             _filtroEstado = estadoKey;
           });
-          _cargarIncidencias();
         }
       },
     );
   }
 
   Widget _buildListaContent() {
-    if (_cargando && _incidencias.isEmpty) {
+    if (_cargando && _todasLasIncidencias.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -267,7 +295,7 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
       );
     }
 
-    if (_error != null && _incidencias.isEmpty) {
+    if (_error != null && _todasLasIncidencias.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -363,17 +391,17 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Encabezado: Categoría y Badge de Estado
+              // Encabezado: Categoría, qué se trata y Badge de Estado
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: inc.categoriaColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(inc.categoriaIcono, color: inc.categoriaColor, size: 24),
+                    child: Icon(inc.categoriaIcono, color: inc.categoriaColor, size: 26),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -383,19 +411,50 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
                         Text(
                           inc.categoriaNombre,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1E293B),
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 3),
                         Text(
-                          fechaFormatted,
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          inc.descripcionTipo,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF475569),
+                            height: 1.25,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                              ),
+                              child: Text(
+                                inc.cuadrilla,
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              fechaFormatted,
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(

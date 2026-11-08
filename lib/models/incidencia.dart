@@ -34,13 +34,17 @@ class Incidencia {
   factory Incidencia.fromJson(Map<String, dynamic> json) {
     // 1. Categoría
     String cod = 'otra_situacion';
-    String nom = 'Incidencia reportada';
+    String nom = '';
     if (json['categoria'] is Map) {
-      cod = json['categoria']['codigo'] ?? cod;
-      nom = json['categoria']['nombre'] ?? nom;
+      final mapCat = json['categoria'] as Map;
+      cod = mapCat['codigo']?.toString() ?? cod;
+      nom = mapCat['titulo']?.toString() ?? mapCat['nombre']?.toString() ?? '';
     } else if (json['categoria'] is String) {
-      cod = json['categoria'];
-      nom = cod;
+      cod = json['categoria'] as String;
+    }
+
+    if (nom.isEmpty || nom == cod || nom == 'Incidencia reportada') {
+      nom = nombreAmigableCategoria(cod);
     }
 
     // 2. Estado
@@ -146,6 +150,63 @@ class Incidencia {
         return 'En cuadrilla';
       case EstadoIncidencia.resuelto:
         return 'Resuelto';
+    }
+  }
+
+  String get descripcionTipo => descripcionTipoIncidencia(categoriaCodigo);
+  String get cuadrilla => cuadrillaSugerida(categoriaCodigo);
+
+  static String nombreAmigableCategoria(String codigo) {
+    switch (codigo) {
+      case 'tapa_desague_abierta':
+        return 'Tapa de alcantarilla o desagüe abierta';
+      case 'luminaria_apagada':
+        return 'Problemas de iluminación pública';
+      case 'choque_vehiculo':
+        return 'Choque o accidente de tránsito';
+      case 'semaforo_apagado':
+        return 'Semáforo apagado o defectuoso';
+      case 'hoyo_calzada':
+        return 'Hoyo o bache en la calzada';
+      case 'otra_situacion':
+      default:
+        return 'Otra situación en la vía pública';
+    }
+  }
+
+  static String descripcionTipoIncidencia(String codigo) {
+    switch (codigo) {
+      case 'tapa_desague_abierta':
+        return 'Peligro de caída o daño vehicular por tapa de sumidero rota o faltante.';
+      case 'luminaria_apagada':
+        return 'Luminaria apagada, foco intermitente o calle a oscuras.';
+      case 'choque_vehiculo':
+        return 'Accidente o colisión vehicular requiriendo despeje o apoyo vial.';
+      case 'semaforo_apagado':
+        return 'Cruce peligroso por semáforo fuera de servicio o defectuoso.';
+      case 'hoyo_calzada':
+        return 'Deformación, bache o grieta profunda en la calzada.';
+      case 'otra_situacion':
+      default:
+        return 'Incidencia en vía pública reportada por vecino para inspección.';
+    }
+  }
+
+  static String cuadrillaSugerida(String codigo) {
+    switch (codigo) {
+      case 'tapa_desague_abierta':
+        return 'Obras Públicas / Aguas';
+      case 'luminaria_apagada':
+        return 'Alumbrado Público';
+      case 'choque_vehiculo':
+        return 'Seguridad Ciudadana / Tránsito';
+      case 'semaforo_apagado':
+        return 'Señalización y Tránsito';
+      case 'hoyo_calzada':
+        return 'Vialidad y Pavimentación';
+      case 'otra_situacion':
+      default:
+        return 'Cuadrilla General';
     }
   }
 
