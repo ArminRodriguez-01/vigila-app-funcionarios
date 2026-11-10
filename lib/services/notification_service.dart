@@ -5,8 +5,8 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  // App ID de OneSignal (se puede configurar aquí o mediante variable)
-  static const String oneSignalAppId = "ONESIGNAL_APP_ID_AQUI";
+  // App ID de OneSignal vinculado al panel de funcionarios
+  static const String oneSignalAppId = "9d230673-ad1e-4559-8056-bd9f70db2fd8";
 
   Function(String reporteId)? onIncidenciaRecibida;
 

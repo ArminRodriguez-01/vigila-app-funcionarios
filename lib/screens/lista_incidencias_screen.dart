@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/incidencia.dart';
 import '../services/cuadrilla_api_service.dart';
@@ -56,6 +57,16 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
       // muestren la cantidad total real sin verse afectados por la tarjeta activa.
       final lista = await _apiService.listarIncidencias();
       if (mounted) {
+        // Detectar si llegaron incidencias nuevas mientras la app está abierta
+        if (silencioso && _todasLasIncidencias.isNotEmpty) {
+          final Set<String> idsPrevios = _todasLasIncidencias.map((i) => i.id).toSet();
+          final List<Incidencia> nuevas = lista.where((i) => !idsPrevios.contains(i.id)).toList();
+          if (nuevas.isNotEmpty) {
+            HapticFeedback.vibrate();
+            _mostrarAlertaNuevasIncidencias(nuevas);
+          }
+        }
+
         setState(() {
           _todasLasIncidencias = lista;
           _cargando = false;
@@ -70,6 +81,51 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
         });
       }
     }
+  }
+
+  void _mostrarAlertaNuevasIncidencias(List<Incidencia> nuevas) {
+    if (!mounted || nuevas.isEmpty) return;
+    final primera = nuevas.first;
+    final String direccion = primera.direccionTexto.isNotEmpty ? primera.direccionTexto : "Victoria";
+    final String texto = nuevas.length == 1
+        ? '🚨 ¡Nueva incidencia! ${primera.descripcionTipo} en $direccion'
+        : '🚨 ¡Se han reportado ${nuevas.length} nuevas incidencias!';
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.notifications_active, color: Colors.amber, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                texto,
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(
+          label: 'VER',
+          textColor: const Color(0xFF38BDF8),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetalleIncidenciaScreen(incidencia: primera),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   // Contadores globales calculados siempre sobre el total de incidencias
