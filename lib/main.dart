@@ -32,7 +32,8 @@ void main() async {
   notifService.onIncidenciaRecibida = (reporteId) async {
     try {
       final incidencia = await CuadrillaApiService.instance.obtenerDetalle(reporteId);
-      navigatorKey.currentState?.push(
+      final navegador = await _esperarNavegador();
+      navegador?.push(
         MaterialPageRoute(
           builder: (_) => DetalleIncidenciaScreen(incidencia: incidencia),
         ),
@@ -43,6 +44,18 @@ void main() async {
   };
 
   runApp(const VigilaFuncionariosApp());
+}
+
+/// Al abrir la app desde una notificación, la pantalla puede no estar lista todavía.
+/// Espera hasta 10 segundos a que exista el navegador antes de abrir la incidencia.
+Future<NavigatorState?> _esperarNavegador() async {
+  for (var intento = 0; intento < 100; intento++) {
+    final navegador = navigatorKey.currentState;
+    if (navegador != null) return navegador;
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+  debugPrint('La app no quedó lista a tiempo para abrir la incidencia de la notificación.');
+  return null;
 }
 
 class VigilaFuncionariosApp extends StatelessWidget {
