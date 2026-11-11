@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'core/actualizacion/actualizacion_gate.dart';
 import 'screens/lista_incidencias_screen.dart';
 import 'screens/detalle_incidencia_screen.dart';
 import 'services/cuadrilla_api_service.dart';
@@ -75,6 +76,8 @@ class VigilaFuncionariosApp extends StatelessWidget {
     return MaterialApp(
       title: 'Vigila Funcionarios',
       navigatorKey: navigatorKey,
+      // Bloquea el uso de la app si hay un release más nuevo en GitHub.
+      builder: (context, child) => ActualizacionGate(child: child ?? const SizedBox.shrink()),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
