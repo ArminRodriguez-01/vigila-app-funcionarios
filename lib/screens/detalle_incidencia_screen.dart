@@ -226,11 +226,17 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      // No subir la hoja por detrás de la barra de estado ni de la cámara.
+      useSafeArea: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
+      // SafeArea inferior: el botón no queda tapado por la barra de navegación del teléfono.
+      // viewInsets: sube el contenido cuando aparece el teclado.
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: EdgeInsets.only(
           left: 20,
           right: 20,
@@ -282,6 +288,7 @@ class _DetalleIncidenciaScreenState extends State<DetalleIncidenciaScreen> {
               child: const Text('Confirmar y Marcar Resuelto', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
+        ),
         ),
       ),
     );

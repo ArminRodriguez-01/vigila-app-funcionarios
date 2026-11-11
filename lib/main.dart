@@ -11,13 +11,20 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configurar la barra superior del sistema (Status Bar) para que coincida con el verde institucional
+  // Pantalla completa "de borde a borde" en todas las versiones de Android.
+  // Android 15+ lo impone igual; activarlo siempre hace que la app se vea igual en todos
+  // los teléfonos. Las barras quedan transparentes y cada pantalla usa SafeArea para no
+  // quedar debajo de la cámara, la barra de estado ni los botones/gestos del sistema.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF0F766E), // Mismo verde esmeralda institucional
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.white,
+      statusBarColor: Colors.transparent, // el AppBar verde se dibuja detrás
+      statusBarIconBrightness: Brightness.light, // íconos blancos sobre el verde (Android)
+      statusBarBrightness: Brightness.dark, // íconos blancos (iOS)
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
     ),
   );
 
@@ -83,6 +90,12 @@ class VigilaFuncionariosApp extends StatelessWidget {
           elevation: 2,
           backgroundColor: colorInstitucional,
           foregroundColor: Colors.white,
+          // Barra de estado transparente con íconos blancos sobre el verde, en todas las pantallas.
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
           iconTheme: IconThemeData(color: Colors.white),
           titleTextStyle: TextStyle(
             color: Colors.white,
