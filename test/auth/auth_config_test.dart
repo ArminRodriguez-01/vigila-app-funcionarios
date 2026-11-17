@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vigila_funcionarios/core/auth/auth_config.dart';
+import 'package:vigila_funcionarios/core/auth/http_auth_repository.dart';
 
 void main() {
   test('el mock nunca se activa en release aunque se haya solicitado', () {
@@ -14,5 +15,9 @@ void main() {
 
   test('sin --dart-define=USAR_MOCK_AUTH el mock está apagado', () {
     expect(AuthConfig.usarMock, isFalse);
+  });
+
+  test('crearAuthRepository usa el backend real cuando el mock está apagado', () {
+    expect(crearAuthRepository(), isA<HttpAuthRepository>());
   });
 }

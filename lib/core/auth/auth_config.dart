@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'auth_repository.dart';
+import 'http_auth_repository.dart';
 import 'mock_auth_repository.dart';
 
 /// Duración de la sesión: 7 días desde el último ingreso.
@@ -21,5 +22,6 @@ class AuthConfig {
       resolverUsarMock(solicitado: _mockSolicitado, esRelease: kReleaseMode);
 }
 
-/// Repositorio que usa la app. (La rama HTTP se agrega junto con `HttpAuthRepository`.)
-AuthRepository crearAuthRepository() => MockAuthRepository();
+/// Repositorio que usa la app: el mock solo en desarrollo, el backend real en el resto.
+AuthRepository crearAuthRepository() =>
+    AuthConfig.usarMock ? MockAuthRepository() : HttpAuthRepository();
