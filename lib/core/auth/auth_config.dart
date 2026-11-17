@@ -1,0 +1,25 @@
+import 'package:flutter/foundation.dart';
+
+import 'auth_repository.dart';
+import 'mock_auth_repository.dart';
+
+/// Duración de la sesión: 7 días desde el último ingreso.
+const Duration kDuracionSesion = Duration(days: 7);
+
+/// El mock solo vale si se pidió y NO es un build release: un APK publicado jamás
+/// debe aceptar las credenciales de demostración.
+bool resolverUsarMock({required bool solicitado, required bool esRelease}) =>
+    solicitado && !esRelease;
+
+class AuthConfig {
+  AuthConfig._();
+
+  static const bool _mockSolicitado = bool.fromEnvironment('USAR_MOCK_AUTH');
+
+  /// Para desarrollar: `flutter run --dart-define=USAR_MOCK_AUTH=true`.
+  static bool get usarMock =>
+      resolverUsarMock(solicitado: _mockSolicitado, esRelease: kReleaseMode);
+}
+
+/// Repositorio que usa la app. (La rama HTTP se agrega junto con `HttpAuthRepository`.)
+AuthRepository crearAuthRepository() => MockAuthRepository();
