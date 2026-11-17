@@ -38,6 +38,13 @@ final class SinConexionException extends AuthException {
       : super(mensaje ?? 'No hay conexión con el servidor. Revisa tu internet.');
 }
 
+/// El servidor no respondió a tiempo (suele ser el arranque en frío de Render: 30-60 s).
+/// No se culpa a la conexión del usuario: reintentar casi siempre funciona.
+final class ServidorLentoException extends AuthException {
+  const ServidorLentoException([String? mensaje])
+      : super(mensaje ?? 'El servidor está tardando en responder. Intenta de nuevo en unos segundos.');
+}
+
 /// El servidor respondió con un error inesperado (5xx o cuerpo inválido).
 final class ErrorServidorException extends AuthException {
   const ErrorServidorException(this.status, [String? mensaje])

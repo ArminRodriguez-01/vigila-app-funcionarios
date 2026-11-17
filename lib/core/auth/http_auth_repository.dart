@@ -11,16 +11,28 @@ import 'sesion.dart';
 
 /// Habla con el backend real. El contrato completo está en `docs/contratos-backend-auth.md`.
 class HttpAuthRepository implements AuthRepository {
-  HttpAuthRepository({http.Client? client, DateTime Function()? ahora, String? baseUrl})
-      : _client = client ?? http.Client(),
+  HttpAuthRepository({
+    http.Client? client,
+    DateTime Function()? ahora,
+    String? baseUrl,
+    this._timeoutLogin = timeoutLoginPorDefecto,
+    this._timeoutRapido = timeoutRapidoPorDefecto,
+  })  : _client = client ?? http.Client(),
         _ahora = ahora ?? DateTime.now,
         _baseUrl = baseUrl ?? CuadrillaApiService.baseUrl;
 
-  static const _timeout = Duration(seconds: 15);
+  /// El login es lo primero que hace el funcionario y puede despertar al servidor (Render
+  /// tarda 30-60 s en arrancar): se le da tiempo para no mostrar un error falso.
+  static const timeoutLoginPorDefecto = Duration(seconds: 60);
+
+  /// Renovar y cerrar sesión corren en segundo plano y se reintentan solos.
+  static const timeoutRapidoPorDefecto = Duration(seconds: 15);
 
   final http.Client _client;
   final DateTime Function() _ahora;
   final String _baseUrl;
+  final Duration _timeoutLogin;
+  final Duration _timeoutRapido;
 
   @override
   Future<Sesion> iniciarSesion(String email, String password) async {
@@ -28,6 +40,7 @@ class HttpAuthRepository implements AuthRepository {
       '/cuadrilla/login',
       cuerpo: {'email': email, 'password': password},
       esLogin: true,
+      timeout: _timeoutLogin,
     );
     return _leerSesion(respuesta);
   }
@@ -48,6 +61,7 @@ class HttpAuthRepository implements AuthRepository {
     Map<String, dynamic>? cuerpo,
     String? token,
     bool esLogin = false,
+    Duration? timeout,
   }) async {
     final http.Response respuesta;
     try {
@@ -61,9 +75,9 @@ class HttpAuthRepository implements AuthRepository {
             },
             body: cuerpo == null ? null : jsonEncode(cuerpo),
           )
-          .timeout(_timeout);
+          .timeout(timeout ?? _timeoutRapido);
     } on TimeoutException {
-      throw const SinConexionException();
+      throw const ServidorLentoException();
     } on SocketException {
       throw const SinConexionException();
     } on http.ClientException {

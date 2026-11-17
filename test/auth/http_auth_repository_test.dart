@@ -120,16 +120,41 @@ void main() {
     expect(repo.iniciarSesion('a@b.cl', 'x'), throwsA(isA<DemasiadosIntentosException>()));
   });
 
-  test('ClientException, SocketException y TimeoutException lanzan SinConexionException', () async {
-    final fallas = <Object>[
-      http.ClientException('sin red'),
-      const SocketException('sin red'),
-      TimeoutException('lento'),
-    ];
+  test('ClientException y SocketException lanzan SinConexionException', () async {
+    final fallas = <Object>[http.ClientException('sin red'), const SocketException('sin red')];
     for (final falla in fallas) {
       final repo = _repo((_) async => throw falla);
       await expectLater(repo.renovar('t'), throwsA(isA<SinConexionException>()));
     }
+  });
+
+  test('un TimeoutException lanza ServidorLentoException y no culpa a la conexión del usuario', () {
+    final repo = _repo((_) async => throw TimeoutException('lento'));
+
+    expect(
+      repo.iniciarSesion('a@b.cl', 'x'),
+      throwsA(isA<ServidorLentoException>().having((e) => e.mensaje, 'mensaje', contains('tardando'))),
+    );
+  });
+
+  test('el login espera más que las demás llamadas (arranque en frío del servidor)', () async {
+    final repo = HttpAuthRepository(
+      client: MockClient((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        return _json(_cuerpoSesion(), 200);
+      }),
+      ahora: () => _ahora,
+      baseUrl: _base,
+      timeoutLogin: const Duration(milliseconds: 600),
+      timeoutRapido: const Duration(milliseconds: 50),
+    );
+
+    expect((await repo.iniciarSesion('a@b.cl', 'x')).token, 'nuevo');
+    await expectLater(repo.renovar('t'), throwsA(isA<ServidorLentoException>()));
+  });
+
+  test('por defecto el login espera al menos 45 segundos', () {
+    expect(HttpAuthRepository.timeoutLoginPorDefecto, greaterThanOrEqualTo(const Duration(seconds: 45)));
   });
 
   test('500 lanza ErrorServidorException con el status', () {

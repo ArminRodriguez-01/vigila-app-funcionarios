@@ -178,6 +178,7 @@ PyJWT valide con la misma hora, usar `freezegun` o emitir tokens con `exp` expl�
 | Volver a primer plano | Si pasaron 5 minutos desde la última renovación, renueva; si la sesión ya venció localmente, cierra |
 | Respuesta 401 en cualquier llamada de reportes | Cierra la sesión y vuelve al login |
 | Sin red o 5xx al renovar | Conserva la sesión y reintenta en la siguiente apertura |
+| Login con el servidor dormido (Render) | Espera hasta **60 s** y, si no responde, avisa «El servidor está tardando en responder»; renovar y logout esperan 15 s |
 | Cerrar sesión (botón) | Borra la sesión local y llama a `/logout` (si falla, la ignora) |
 
 La sesión se guarda cifrada en el dispositivo (Keystore de Android). Si ese almacenamiento

@@ -61,3 +61,4 @@ Si se pierde la llave, nadie podrá actualizar (habría que desinstalar e instal
 ## Inicio de sesión
 - Los APK de release usan siempre el backend real. El modo mock (`--dart-define=USAR_MOCK_AUTH=true`) es solo para desarrollo y nunca se activa en una compilación release.
 - Contrato que debe cumplir el backend: `docs/contratos-backend-auth.md`.
+- **No publicar un release con el login hasta que el backend lo soporte** (tokens de 7 días y `POST /cuadrilla/sesion/renovar`). Con el backend de hoy el token dura 15 minutos y la renovación recibe un 404 que la app ignora: la sesión se cerraría casi en cada apertura. Publicar un release además bloquea a los usuarios con versiones anteriores.
