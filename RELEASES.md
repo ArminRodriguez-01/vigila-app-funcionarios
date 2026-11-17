@@ -57,3 +57,7 @@ Si se pierde la llave, nadie podrá actualizar (habría que desinstalar e instal
 - En modo debug no bloquea. Para probar la pantalla:
   `flutter run --dart-define=PROBAR_ACTUALIZACION=true`.
 - La primera versión con este sistema debe instalarse a mano; las apps anteriores no lo incluyen.
+
+## Inicio de sesión
+- Los APK de release usan siempre el backend real. El modo mock (`--dart-define=USAR_MOCK_AUTH=true`) es solo para desarrollo y nunca se activa en una compilación release.
+- Contrato que debe cumplir el backend: `docs/contratos-backend-auth.md`.
