@@ -2,12 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../core/auth/auth_controller.dart';
 import '../models/incidencia.dart';
 import '../services/cuadrilla_api_service.dart';
 import 'detalle_incidencia_screen.dart';
 
 class ListaIncidenciasScreen extends StatefulWidget {
-  const ListaIncidenciasScreen({super.key});
+  const ListaIncidenciasScreen({super.key, required this.auth});
+
+  final AuthController auth;
 
   @override
   State<ListaIncidenciasScreen> createState() => _ListaIncidenciasScreenState();
@@ -81,6 +84,21 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
         });
       }
     }
+  }
+
+  Future<void> _confirmarCerrarSesion() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Cerrar sesión?'),
+        content: const Text('Tendrás que ingresar de nuevo con tu correo y contraseña.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cerrar sesión')),
+        ],
+      ),
+    );
+    if (confirmar == true) await widget.auth.cerrarSesion();
   }
 
   void _mostrarAlertaNuevasIncidencias(List<Incidencia> nuevas) {
@@ -203,6 +221,11 @@ class _ListaIncidenciasScreenState extends State<ListaIncidenciasScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: 'Refrescar datos',
             onPressed: () => _cargarIncidencias(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: _confirmarCerrarSesion,
           ),
         ],
       ),

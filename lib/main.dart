@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/actualizacion/actualizacion_gate.dart';
+import 'core/auth/auth_config.dart';
+import 'core/auth/auth_controller.dart';
+import 'core/auth/auth_gate.dart';
 import 'screens/lista_incidencias_screen.dart';
 import 'screens/detalle_incidencia_screen.dart';
 import 'services/cuadrilla_api_service.dart';
@@ -32,12 +37,24 @@ void main() async {
   // Inicializar localización para fechas en español
   await initializeDateFormatting('es', null);
 
+  // Sesión del funcionario: restaurar no espera a la red, así la app abre aunque no haya señal.
+  final auth = AuthController(
+    repositorio: crearAuthRepository(),
+    storage: crearSesionStorage(),
+  );
+  CuadrillaApiService.instance.tokenProvider = () => auth.token;
+  CuadrillaApiService.instance.onNoAutorizado =
+      () => unawaited(auth.cerrarSesion(motivo: MotivoCierre.sesionExpirada));
+  await auth.restaurar();
+
   // Inicializar servicio de notificaciones Push (OneSignal)
   final notifService = NotificationService.instance;
   await notifService.inicializar();
 
   // Configurar apertura directa de incidencia al pulsar notificación push
   notifService.onIncidenciaRecibida = (reporteId) async {
+    // Sin sesión no se muestran incidencias: el toque se ignora y el funcionario ve el login.
+    if (auth.estado != EstadoAuth.autenticado) return;
     try {
       final incidencia = await CuadrillaApiService.instance.obtenerDetalle(reporteId);
       final navegador = await _esperarNavegador();
@@ -51,7 +68,7 @@ void main() async {
     }
   };
 
-  runApp(const VigilaFuncionariosApp());
+  runApp(VigilaFuncionariosApp(auth: auth));
 }
 
 /// Al abrir la app desde una notificación, la pantalla puede no estar lista todavía.
@@ -67,7 +84,9 @@ Future<NavigatorState?> _esperarNavegador() async {
 }
 
 class VigilaFuncionariosApp extends StatelessWidget {
-  const VigilaFuncionariosApp({super.key});
+  const VigilaFuncionariosApp({super.key, required this.auth});
+
+  final AuthController auth;
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +130,7 @@ class VigilaFuncionariosApp extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
-      home: const ListaIncidenciasScreen(),
+      home: AuthGate(controller: auth, child: ListaIncidenciasScreen(auth: auth)),
     );
   }
 }
