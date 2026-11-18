@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import '../../services/cuadrilla_api_service.dart';
+import 'auth_config.dart';
 import 'auth_exceptions.dart';
 import 'auth_repository.dart';
 import 'sesion.dart';
@@ -19,7 +19,7 @@ class HttpAuthRepository implements AuthRepository {
     this._timeoutRapido = timeoutRapidoPorDefecto,
   })  : _client = client ?? http.Client(),
         _ahora = ahora ?? DateTime.now,
-        _baseUrl = baseUrl ?? CuadrillaApiService.baseUrl;
+        _baseUrl = baseUrl ?? AuthConfig.baseUrl;
 
   /// El login es lo primero que hace el funcionario y puede despertar al servidor (Render
   /// tarda 30-60 s en arrancar): se le da tiempo para no mostrar un error falso.

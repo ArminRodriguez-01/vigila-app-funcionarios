@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:vigila_funcionarios/core/auth/auth_exceptions.dart';
+import 'package:vigila_funcionarios/core/auth/auth_config.dart';
 import 'package:vigila_funcionarios/core/auth/http_auth_repository.dart';
+import 'package:vigila_funcionarios/services/cuadrilla_api_service.dart';
 
 const _base = 'https://test.local/api/v1';
 final _ahora = DateTime.utc(2026, 11, 17, 12);
@@ -37,6 +39,22 @@ HttpAuthRepository _repo(Future<http.Response> Function(http.Request) handler) =
     HttpAuthRepository(client: MockClient(handler), ahora: () => _ahora, baseUrl: _base);
 
 void main() {
+  test('sin baseUrl usa el servicio de autenticación, no el backend de reportes', () async {
+    late http.Request visto;
+    final repo = HttpAuthRepository(
+      client: MockClient((req) async {
+        visto = req;
+        return _json(_cuerpoSesion(), 200);
+      }),
+      ahora: () => _ahora,
+    );
+
+    await repo.iniciarSesion('ana@victoria.cl', 'clave');
+
+    expect(visto.url.toString(), '${AuthConfig.baseUrl}/cuadrilla/login');
+    expect(AuthConfig.baseUrl, isNot(CuadrillaApiService.baseUrl));
+  });
+
   test('iniciarSesion hace POST a /cuadrilla/login con email y password', () async {
     late http.Request visto;
     final repo = _repo((req) async {

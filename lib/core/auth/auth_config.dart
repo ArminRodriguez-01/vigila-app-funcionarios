@@ -18,6 +18,14 @@ class AuthConfig {
 
   static const bool _mockSolicitado = bool.fromEnvironment('USAR_MOCK_AUTH');
 
+  /// Servicio de autenticación de funcionarios (AuthService, .NET). Los reportes siguen en
+  /// [CuadrillaApiService.baseUrl] (FastAPI). Para apuntar a otro servidor:
+  /// `flutter run --dart-define=AUTH_BASE_URL=http://10.0.2.2:8080/api/v1`.
+  static const String baseUrl = String.fromEnvironment(
+    'AUTH_BASE_URL',
+    defaultValue: 'https://authlogin-7abx.onrender.com/api/v1',
+  );
+
   /// Para desarrollar: `flutter run --dart-define=USAR_MOCK_AUTH=true`.
   static bool get usarMock =>
       resolverUsarMock(solicitado: _mockSolicitado, esRelease: kReleaseMode);

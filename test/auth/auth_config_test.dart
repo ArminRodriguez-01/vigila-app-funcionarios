@@ -22,6 +22,10 @@ void main() {
     expect(crearAuthRepository(), isA<HttpAuthRepository>());
   });
 
+  test('sin --dart-define=AUTH_BASE_URL apunta al servicio de autenticación en Render', () {
+    expect(AuthConfig.baseUrl, 'https://authlogin-7abx.onrender.com/api/v1');
+  });
+
   test('crearSesionStorage usa el almacenamiento seguro cuando el mock está apagado', () {
     expect(crearSesionStorage(), isA<SecureSesionStorage>());
   });
