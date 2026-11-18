@@ -4,7 +4,9 @@ Documento para quien implemente el backend (`vigila-app/backend`, FastAPI). La a
 (`vigila-app-funcionarios`) ya está lista y funciona con un mock; este documento dice qué debe
 cumplir el backend para reemplazarlo.
 
-- Base de las rutas: `https://vigila-app.onrender.com/api/v1/cuadrilla`
+- Base de las rutas de sesión (login, renovar, logout): `https://authlogin-7abx.onrender.com/api/v1/cuadrilla`
+  (servicio AuthService, .NET). Se cambia con `--dart-define=AUTH_BASE_URL=...`.
+- Base de las rutas de reportes: `https://vigila-app.onrender.com/api/v1/cuadrilla` (FastAPI).
 - Formato de errores (ya existe en el backend): `{"codigo": "...", "mensaje": "..."}`
 - `mensaje` se muestra tal cual al funcionario: en español y sin detalles técnicos.
 
