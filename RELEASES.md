@@ -61,4 +61,5 @@ Si se pierde la llave, nadie podrá actualizar (habría que desinstalar e instal
 ## Inicio de sesión
 - Los APK de release usan siempre el backend real. El modo mock (`--dart-define=USAR_MOCK_AUTH=true`) es solo para desarrollo y nunca se activa en una compilación release.
 - Contrato que debe cumplir el backend: `docs/contratos-backend-auth.md`.
-- **No publicar un release con el login hasta que el backend lo soporte** (tokens de 7 días y `POST /cuadrilla/sesion/renovar`). Con el backend de hoy el token dura 15 minutos y la renovación recibe un 404 que la app ignora: la sesión se cerraría casi en cada apertura. Publicar un release además bloquea a los usuarios con versiones anteriores.
+- Desde la v1.1.0 el login, la renovación y el cierre de sesión van al servicio **AuthService** (`https://authlogin-7abx.onrender.com/api/v1`); los reportes siguen en FastAPI. Para otro servidor de auth: `--dart-define=AUTH_BASE_URL=...`.
+- Antes de cada release con cambios de login, verificar que todos los funcionarios tengan cuenta en AuthService: el release obliga a actualizar y la app nueva exige iniciar sesión.

@@ -1,7 +1,7 @@
 name: vigila_funcionarios
 description: "App municipal de terreno para funcionarios y cuadrilla de Victoria."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.13.7
